@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from typing import Any
 
+SENTENCE_BOUNDARIES = ('. ', '.\n', '? ', '?\n', '! ', '!\n', '\n\n')
 
-@dataclass
+@dataclass(frozen=True)
 class Chunk:
     text: str
-    metadata: dict
+    metadata: dict[str, Any]
     index: int
 
 
@@ -14,16 +16,18 @@ def chunk_text(
         overlap: int = 50,
         metadata: dict | None = None
 ) -> list[Chunk]:
-    """
-    Split text into overlapping chunks.
+    """Split text into overlapping chunks.
 
-    Overlap prevents losing context at boundaries - if a relevant
-    sentence gets split, it appears in both chunks.
+    Args:
+        text: The input text to chunk.
+        chunk_size: Maximum characters per chunk.
+        overlap:
+        metadata:
+    Returns:
+        List of Chunk objects with metadata.
 
-    512 tokens is a common size because:
-    - Embedding models have context limits (often 512)
-    - Smaller chunks = more precise retrieval but less context
-    - Larger chunks = more context but retrieval noise
+
+
     """
     if metadata is None:
         metadata = {}
@@ -34,20 +38,20 @@ def chunk_text(
 
     while start < len(text):
         end = start + chunk_size
-        chunk_text = text[start:end]
+        segment = text[start:end]
 
         # Try to break at sentence boundary if we're mid-text
         if end < len(text):
             # Look for last sentence-ending punctuation
-            for sep in ['. ', '.\n', '? ', '!\n', '\n\n']:
-                last_sep = chunk_text.rfind(sep)
-                if last_sep > chunk_size // 2:  # Only if we keep >50% of chunk
-                    chunk_text = chunk_text[:last_sep + 1]
+            for sep in SENTENCE_BOUNDARIES:
+                last_sep = segment.rfind(sep)
+                if last_sep > chunk_size // 2:  # Only if we keep >50% of a chunk
+                    segment = segment[:last_sep + 1]
                     end = start + last_sep + 1
                     break
 
         chunks.append(Chunk(
-            text=chunk_text.strip(),
+            text=segment.strip(),
             metadata={**metadata, 'chunk_index': index},
             index=index
         ))
