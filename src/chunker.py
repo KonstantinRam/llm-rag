@@ -3,7 +3,7 @@ from typing import Any
 
 SENTENCE_BOUNDARIES = ('. ', '.\n', '? ', '?\n', '! ', '!\n', '\n\n')
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots = True)
 class Chunk:
     text: str
     metadata: dict[str, Any]
