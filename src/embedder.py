@@ -1,10 +1,21 @@
 import torch
+import logging
+from typing import List
 from sentence_transformers import SentenceTransformer
 
-from src.chunker import Chunk
 
+from src.chunker import Chunk
+"""
+TODO: from .chunker import Chunk. Packaging
+"""
+
+logger = logging.getLogger(__name__)
 
 class Embedder:
+    device: str
+    model: SentenceTransformer
+    dimension: int
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """
         all-MiniLM-L6-v2: 384 dimensions, fast, decent quality
@@ -22,14 +33,14 @@ class Embedder:
         self.model = SentenceTransformer(model_name, device=self.device)
         self.dimension = self.model.get_sentence_embedding_dimension()
 
-        print(f"Embedder loaded on {self.device}, dimension={self.dimension}")
+        logger.info(f"Embedder loaded on {self.device}, dimension={self.dimension}")
 
     def embed_text(self, text: str) -> list[float]:
         """Embed a single text string."""
         embedding = self.model.encode(text, convert_to_tensor=False)
         return embedding.tolist()
 
-    def embed_chunks(self, chunks: list[Chunk]) -> list[list[float]]:
+    def embed_chunks(self, chunks: list[Chunk]) -> List[List[float]]:
         """
         Embed multiple chunks efficiently.
 
